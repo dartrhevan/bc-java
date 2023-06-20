@@ -100,6 +100,8 @@ public class X509RevocationChecker
         private boolean canSoftFail;
         private long failLogMaxTime;
         private long failHardMaxTime;
+        private boolean isCheckCrlDP = false;
+        private boolean isFailOnNoValidCrl = false;
         private Date validityDate = new Date();
 
         /**
@@ -189,6 +191,28 @@ public class X509RevocationChecker
         public Builder setCheckEndEntityOnly(boolean isTrue)
         {
             this.isCheckEEOnly = isTrue;
+
+            return this;
+        }
+
+        /**
+         * @param isTrue true if CRL Distribution Point should be checked, false only crl cache should be checked.
+         * @return the current builder instance.
+         */
+        public Builder setCheckCrlDistributionPoint(boolean isTrue)
+        {
+            this.isCheckCrlDP = isTrue;
+
+            return this;
+        }
+
+        /**
+         * @param isTrue true if need fail when no valid CRL found, false returns UNREVOKED status.
+         * @return the current builder instance.
+         */
+        public Builder setFailOnNoValidCRLFound(boolean isTrue)
+        {
+            this.isFailOnNoValidCrl = isTrue;
 
             return this;
         }
@@ -298,6 +322,8 @@ public class X509RevocationChecker
     private final long failLogMaxTime;
     private final long failHardMaxTime;
     private final Date validationDate;
+    private final boolean isFailOnNoValidCrl;
+    private final boolean isCheckCrlDP;
 
     private Date currentDate;
     private X500Principal workingIssuerName;
@@ -315,6 +341,8 @@ public class X509RevocationChecker
         this.failLogMaxTime = bldr.failLogMaxTime;
         this.failHardMaxTime = bldr.failHardMaxTime;
         this.validationDate = bldr.validityDate;
+        this.isFailOnNoValidCrl =  bldr.isFailOnNoValidCrl;
+        this.isCheckCrlDP = bldr.isCheckCrlDP;
 
         if (bldr.provider != null)
         {
@@ -468,8 +496,9 @@ public class X509RevocationChecker
             Set<CRL> crls;
             try
             {
-                crls = downloadCRLs(cert.getIssuerX500Principal(), validityDate,
-                    RevocationUtilities.getExtensionValue(cert, Extension.cRLDistributionPoints), helper);
+                crls = isCheckCrlDP ? downloadCRLs(cert.getIssuerX500Principal(), validityDate,
+                    RevocationUtilities.getExtensionValue(cert, Extension.cRLDistributionPoints), helper)
+                : new HashSet<CRL>();
             }
             catch(AnnotatedException e1)
             {
@@ -728,70 +757,70 @@ public class X509RevocationChecker
         JcaJceHelper helper)
         throws AnnotatedException, CertPathValidatorException
     {
-        CRLDistPoint crldp;
-        try
-        {
-            crldp = CRLDistPoint.getInstance(RevocationUtilities.getExtensionValue(cert, Extension.cRLDistributionPoints));
-        }
-        catch (Exception e)
-        {
-            throw new AnnotatedException("cannot read CRL distribution point extension", e);
-        }
 
         CertStatus certStatus = new CertStatus();
         ReasonsMask reasonsMask = new ReasonsMask();
         AnnotatedException lastException = null;
         boolean validCrlFound = false;
 
-        // for each distribution point
-        if (crldp != null)
+        if (isCheckCrlDP)
         {
-            DistributionPoint dps[];
+            CRLDistPoint crldp;
             try
             {
-                dps = crldp.getDistributionPoints();
+                crldp = CRLDistPoint.getInstance(
+                    RevocationUtilities.getExtensionValue(cert, Extension.cRLDistributionPoints));
             }
             catch (Exception e)
             {
-                throw new AnnotatedException("cannot read distribution points", e);
+                throw new AnnotatedException("cannot read CRL distribution point extension", e);
             }
 
-            if (dps != null)
+            // for each distribution point
+            if (crldp != null)
             {
-                PKIXExtendedParameters.Builder pkixBuilder = new PKIXExtendedParameters.Builder(pkixParams);
-                try
-                {
-                    List extras = getAdditionalStoresFromCRLDistributionPoint(crldp, pkixParams.getNamedCRLStoreMap());
-                    for (Iterator it = extras.iterator(); it.hasNext(); )
-                    {
-                        pkixBuilder.addCRLStore((PKIXCRLStore)it.next());
-                    }
-                }
-                catch (AnnotatedException e)
-                {
-                    throw new AnnotatedException(
-                        "no additional CRL locations could be decoded from CRL distribution point extension", e);
+                DistributionPoint dps[];
+                try {
+                    dps = crldp.getDistributionPoints();
+                } catch (Exception e) {
+                    throw new AnnotatedException("cannot read distribution points", e);
                 }
 
-                PKIXExtendedParameters pkixParamsFinal = pkixBuilder.build();
-                Date validityDateFinal = RevocationUtilities.getValidityDate(pkixParamsFinal, currentDate);
-
-                for (int i = 0; i < dps.length && certStatus.getCertStatus() == CertStatus.UNREVOKED && !reasonsMask.isAllReasons(); i++)
-                {
-                    try
-                    {
-                        RFC3280CertPathUtilities.checkCRL(dps[i], pkixParamsFinal, currentDate, validityDateFinal, cert,
-                            sign, workingPublicKey, certStatus, reasonsMask, certPathCerts, helper);
-                        validCrlFound = true;
+                if (dps != null) {
+                    PKIXExtendedParameters.Builder pkixBuilder =
+                        new PKIXExtendedParameters.Builder(pkixParams);
+                    try {
+                        List extras = getAdditionalStoresFromCRLDistributionPoint(crldp,
+                            pkixParams.getNamedCRLStoreMap());
+                        for (Iterator it = extras.iterator(); it.hasNext(); ) {
+                            pkixBuilder.addCRLStore((PKIXCRLStore) it.next());
+                        }
+                    } catch (AnnotatedException e) {
+                        throw new AnnotatedException(
+                            "no additional CRL locations could be decoded from CRL distribution point extension",
+                            e);
                     }
-                    catch (AnnotatedException e)
-                    {
-                        lastException = e;
+
+                    PKIXExtendedParameters pkixParamsFinal = pkixBuilder.build();
+                    Date validityDateFinal =
+                        RevocationUtilities.getValidityDate(pkixParamsFinal, currentDate);
+
+                    for (int i = 0;
+                         i < dps.length && certStatus.getCertStatus() == CertStatus.UNREVOKED &&
+                         !reasonsMask.isAllReasons(); i++) {
+                        try {
+                            RFC3280CertPathUtilities.checkCRL(dps[i], pkixParamsFinal, currentDate,
+                                validityDateFinal, cert,
+                                sign, workingPublicKey, certStatus, reasonsMask, certPathCerts,
+                                helper);
+                            validCrlFound = true;
+                        } catch (AnnotatedException e) {
+                            lastException = e;
+                        }
                     }
                 }
             }
         }
-
         /*
          * If the revocation status has not been determined, repeat the process
          * above with any available CRLs not specified in a distribution point
@@ -816,13 +845,20 @@ public class X509RevocationChecker
                     workingPublicKey, certStatus, reasonsMask, certPathCerts, helper);
                 validCrlFound = true;
             }
+            catch (org.bouncycastle.pkix.jcajce.CRLNotFoundException e)
+            {
+                if (isFailOnNoValidCrl)
+                {
+                    throw e;
+                }
+            }
             catch (AnnotatedException e)
             {
                 lastException = e;
             }
         }
 
-        if (!validCrlFound)
+        if (isFailOnNoValidCrl && !validCrlFound)
         {
             if (lastException instanceof AnnotatedException)
             { 
@@ -840,7 +876,7 @@ public class X509RevocationChecker
             message += ", reason: " + crlReasons[certStatus.getCertStatus()];
             throw new AnnotatedException(message);
         }
-        if (!reasonsMask.isAllReasons() && certStatus.getCertStatus() == CertStatus.UNREVOKED)
+        if (isFailOnNoValidCrl && !reasonsMask.isAllReasons() && certStatus.getCertStatus() == CertStatus.UNREVOKED)
         {
             certStatus.setCertStatus(CertStatus.UNDETERMINED);
         }
