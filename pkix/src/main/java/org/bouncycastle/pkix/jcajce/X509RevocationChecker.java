@@ -780,22 +780,30 @@ public class X509RevocationChecker
             if (crldp != null)
             {
                 DistributionPoint dps[];
-                try {
+                try
+                {
                     dps = crldp.getDistributionPoints();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     throw new AnnotatedException("cannot read distribution points", e);
                 }
 
-                if (dps != null) {
+                if (dps != null)
+                {
                     PKIXExtendedParameters.Builder pkixBuilder =
                         new PKIXExtendedParameters.Builder(pkixParams);
-                    try {
+                    try
+                    {
                         List extras = getAdditionalStoresFromCRLDistributionPoint(crldp,
                             pkixParams.getNamedCRLStoreMap());
-                        for (Iterator it = extras.iterator(); it.hasNext(); ) {
+                        for (Iterator it = extras.iterator(); it.hasNext(); )
+                        {
                             pkixBuilder.addCRLStore((PKIXCRLStore) it.next());
                         }
-                    } catch (AnnotatedException e) {
+                    }
+                    catch (AnnotatedException e)
+                    {
                         throw new AnnotatedException(
                             "no additional CRL locations could be decoded from CRL distribution point extension",
                             e);
@@ -807,14 +815,18 @@ public class X509RevocationChecker
 
                     for (int i = 0;
                          i < dps.length && certStatus.getCertStatus() == CertStatus.UNREVOKED &&
-                         !reasonsMask.isAllReasons(); i++) {
-                        try {
+                         !reasonsMask.isAllReasons(); i++)
+                    {
+                        try
+                        {
                             RFC3280CertPathUtilities.checkCRL(dps[i], pkixParamsFinal, currentDate,
                                 validityDateFinal, cert,
                                 sign, workingPublicKey, certStatus, reasonsMask, certPathCerts,
                                 helper);
                             validCrlFound = true;
-                        } catch (AnnotatedException e) {
+                        }
+                        catch (AnnotatedException e)
+                        {
                             lastException = e;
                         }
                     }

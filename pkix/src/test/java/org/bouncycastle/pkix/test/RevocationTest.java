@@ -443,13 +443,11 @@ public class RevocationTest
         Set trust = new HashSet();
         trust.add(new TrustAnchor(trustCert, null));
 
-        List<CRL> crls = new ArrayList<CRL>();
-        crls.add(TestUtil.makeCrl(caCert, caKp.getPrivate(), eeCert.getSerialNumber()));
-
         X509RevocationChecker revocationChecker = new X509RevocationChecker
             .Builder(new TrustAnchor(trustCert, null))
             .setCheckEndEntityOnly(true)
             .setSoftFailHardLimit(true, 0)
+            .setFailOnNoValidCRLFound(true)
             .build();
 
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX", "BC");
@@ -483,6 +481,59 @@ public class RevocationTest
         {
             assertTrue(e.getMessage().equals("No CRLs found for issuer \"cn=CA Cert\""));
         }
+    }
+
+    public void testNoCrlFound()
+        throws Exception
+    {
+        List list = new ArrayList();
+
+        list.add(caCert);
+        list.add(eeCert);
+
+        CollectionCertStoreParameters ccsp = new CollectionCertStoreParameters(list);
+        CertStore store = CertStore.getInstance("Collection", ccsp, "BC");
+        Date validDate = new Date(trustCrl.getThisUpdate().getTime() + 60 * 60 * 1000);
+        //validating path
+        List certchain = new ArrayList();
+        certchain.add(eeCertWithDistPoint);
+        certchain.add(caCert);
+
+        CertPath cp = CertificateFactory.getInstance("X.509", "BC").generateCertPath(certchain);
+        Set trust = new HashSet();
+        trust.add(new TrustAnchor(trustCert, null));
+
+        X509RevocationChecker revocationChecker = new X509RevocationChecker
+            .Builder(new TrustAnchor(trustCert, null))
+            .setCheckEndEntityOnly(true)
+            .setSoftFailHardLimit(true, 0)
+            .setCheckCrlDistributionPoint(false)
+            .build();
+
+        CertPathValidator cpv = CertPathValidator.getInstance("PKIX", "BC");
+        PKIXParameters param = new PKIXParameters(trust);
+        param.addCertStore(store);
+        param.setDate(validDate);
+        param.setRevocationEnabled(false);
+
+        param.addCertPathChecker(revocationChecker);
+
+        PKIXCertPathValidatorResult result =
+            (PKIXCertPathValidatorResult)cpv.validate(cp, param);
+
+        try
+        {
+            Thread.sleep(1000);     // make sure some time elapses between first and second failure.
+        }
+        catch (Exception e)
+        {
+            Thread.currentThread().interrupt();
+        }
+
+        // should not fail on the second attempt.
+        result = (PKIXCertPathValidatorResult)cpv.validate(cp, param);
+
+        assertNotNull(result);
     }
 
     public void testRevokedWithCRLDistPointEndEntityOnly()
