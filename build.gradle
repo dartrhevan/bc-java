@@ -149,6 +149,9 @@ task printProperties {
 
 subprojects {
   apply plugin: 'eclipse'
+  apply plugin: 'maven'
+  apply plugin: 'maven-publish'
+
 
   JavaVersion current = JavaVersion.current();
   if (current.compareTo(JavaVersion.VERSION_1_8) <= 0)
@@ -213,6 +216,26 @@ subprojects {
 
   jacoco {
     reportsDirectory =  layout.buildDirectory.dir("jacoco")
+  }
+
+  publishing {
+    publications {
+      mavenJava(MavenPublication) {
+        from components.java
+      }
+    }
+    repositories {
+      mavenLocal()
+
+      maven {
+        credentials {
+          username = "$System.env.NEXUS_USER"
+          password = "$System.env.NEXUS_PASS"
+        }
+
+        url = "${System.env.NEXUS_URL}/repository/maven-release-fts/"
+      }
+    }
   }
 
 }

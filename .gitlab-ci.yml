@@ -1,30 +1,18 @@
-stages:
-  - check
-  - test
+ variables:
+    BUILD_IMAGE: amd64/gradle
+    BUILD_IMAGE_TAG: 6.8.3-jdk11
 
-check-code:
-  stage: check
+stages:
+  - build         # Build lib
+
+
+Build:
+  stage: build
+  image: ${BUILD_IMAGE}:${BUILD_IMAGE_TAG}
+  before_script: []
+  tags:
+    - devops
   script:
-    - "apply_overlay bc-java ./"
-    - ". cienv.sh; \ gradle check -x test;"
-  
-test-code-8:
-  stage: test
-  script:
-    - "apply_overlay bc-java ./"
-    - "sh gettestdata.sh"
-    - ". cienv-8.sh; \ gradle -stacktrace clean build;"
-  
-test-code-11:
-  stage: test
-  script:
-    - "apply_overlay bc-java ./"
-    - "sh gettestdata.sh"
-    - ". cienv-11.sh; \ gradle -stacktrace clean build;"
-  
-test-code-17:
-  stage: test
-  script:
-    - "apply_overlay bc-java ./"
-    - "sh gettestdata.sh"
-    - ". cienv-17.sh; \ gradle -stacktrace clean build;"
+    - set -xv
+    - gradle build
+    - gradle publish
