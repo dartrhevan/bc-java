@@ -103,6 +103,7 @@ public class X509RevocationChecker
         private boolean isCheckCrlDP = false;
         private boolean isFailOnNoValidCrl = false;
         private Date validityDate = new Date();
+        public boolean checkCrlDate = true;
 
         /**
          * Base constructor.
@@ -299,6 +300,19 @@ public class X509RevocationChecker
         }
 
         /**
+         * Flag whether or not take CRL effective date into account.
+         *
+         * @param checkCrlDate
+         * @return the current builder.
+         */
+        public Builder setCheckCrlDate(boolean checkCrlDate)
+        {
+            this.checkCrlDate = checkCrlDate;
+
+            return this;
+        }
+
+        /**
          * Build a revocation checker conforming to the current builder.
          *
          * @return a new X509RevocationChecker.
@@ -324,6 +338,7 @@ public class X509RevocationChecker
     private final Date validationDate;
     private final boolean isFailOnNoValidCrl;
     private final boolean isCheckCrlDP;
+    public final boolean checkCrlDate;
 
     private Date currentDate;
     private X500Principal workingIssuerName;
@@ -343,6 +358,7 @@ public class X509RevocationChecker
         this.validationDate = bldr.validityDate;
         this.isFailOnNoValidCrl =  bldr.isFailOnNoValidCrl;
         this.isCheckCrlDP = bldr.isCheckCrlDP;
+        this.checkCrlDate = bldr.checkCrlDate;
 
         if (bldr.provider != null)
         {
@@ -440,6 +456,7 @@ public class X509RevocationChecker
 
             pkixBuilder = new PKIXExtendedParameters.Builder(pkixParams);
             pkixBuilder.setValidityModel(validityModel);
+            pkixBuilder.setCheckCrlDate(checkCrlDate);
         }
         catch (GeneralSecurityException e)
         {

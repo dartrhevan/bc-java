@@ -60,6 +60,7 @@ public class PKIXExtendedParameters
         private int validityModel = PKIX_VALIDITY_MODEL;
         private boolean useDeltas = false;
         private Set<TrustAnchor> trustAnchors;
+        public boolean checkCrlDate;
 
         public Builder(PKIXParameters baseParameters)
         {
@@ -186,6 +187,19 @@ public class PKIXExtendedParameters
             this.revocationEnabled = revocationEnabled;
         }
 
+        /**
+         * Flag whether or not take CRL effective date into account.
+         *
+         * @param checkCrlDate
+         * @return the current builder.
+         */
+        public Builder setCheckCrlDate(boolean checkCrlDate)
+        {
+            this.checkCrlDate = checkCrlDate;
+
+            return this;
+        }
+
         public PKIXExtendedParameters build()
         {
             return new PKIXExtendedParameters(this);
@@ -204,6 +218,7 @@ public class PKIXExtendedParameters
     private final boolean useDeltas;
     private final int validityModel;
     private final Set<TrustAnchor> trustAnchors;
+    private final boolean checkCrlDate;
 
     private PKIXExtendedParameters(Builder builder)
     {
@@ -219,6 +234,7 @@ public class PKIXExtendedParameters
         this.useDeltas = builder.useDeltas;
         this.validityModel = builder.validityModel;
         this.trustAnchors = Collections.unmodifiableSet(builder.trustAnchors);
+        this.checkCrlDate = builder.checkCrlDate;
     }
 
     public List<PKIXCertStore> getCertificateStores()
@@ -344,6 +360,11 @@ public class PKIXExtendedParameters
     public boolean isRevocationEnabled()
     {
         return revocationEnabled;
+    }
+
+    public boolean isCheckCrlDate()
+    {
+        return checkCrlDate;
     }
 
     public boolean getPolicyQualifiersRejected()

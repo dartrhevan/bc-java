@@ -1199,7 +1199,8 @@ class CertPathValidatorUtilities
         PKIXCRLStoreSelector crlSelect = new PKIXCRLStoreSelector.Builder(baseCrlSelect).setCompleteCRLEnabled(true)
             .build();
 
-        Set crls = PKIXCRLUtil.findCRLs(crlSelect, validityDate, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores());
+        Set crls = PKIXCRLUtil.findCRLs(crlSelect, validityDate, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores(),
+            paramsPKIX.isCheckCrlDate());
 
         checkCRLsNotEmpty(params, crls, cert);
 

@@ -34,6 +34,7 @@ class PKIXCRLUtil
             throw new AnnotatedException("Exception obtaining complete CRLs.", e);
         }
 
+        System.out.println("initialSet count " + initialSet);
         Set finalSet = new HashSet();
 
         // based on RFC 5280 6.3.3
