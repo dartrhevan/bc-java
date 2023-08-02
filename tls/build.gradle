@@ -1,8 +1,8 @@
 dependencies {
-    implementation project(':core')
-    implementation project(':prov')
-    implementation project(':util')
-    implementation project(':pkix')
+    compile project(':core')
+    compile project(':prov')
+    compile project(':util')
+    compile project(':pkix')
 }
 
 jar.archiveBaseName = "bctls-$vmrange"

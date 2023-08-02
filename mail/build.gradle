@@ -1,8 +1,8 @@
 dependencies {
-    implementation project(':core')
-    implementation project(':util')
-    implementation project(':pkix')
-    implementation project(':prov')
+    compile project(':core')
+    compile project(':util')
+    compile project(':pkix')
+    compile project(':prov')
 
     implementation group: 'javax.mail', name: 'mail', version: '1.4'
 }

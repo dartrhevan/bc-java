@@ -221,6 +221,9 @@ subprojects {
   publishing {
     publications {
       mavenJava(MavenPublication) {
+        groupId 'org.bouncycastle'
+        artifactId "bc$project.name-$vmrange"
+//        artifact jar
         from components.java
       }
     }
@@ -237,7 +240,6 @@ subprojects {
       }
     }
   }
-
 }
 
 test.dependsOn([':core:test', ':prov:test', ':pkix:test', ':mail:test', 'pg:test', ':tls:test'])
