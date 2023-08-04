@@ -1024,6 +1024,7 @@ class CertPathValidatorUtilities
      * CRLs.
      */
     protected static Set getDeltaCRLs(Date validityDate,
+                                      boolean checkCrlDate,
                                       X509CRL completeCRL,
                                       List<CertStore> certStores,
                                       List<PKIXCRLStore> pkixCrlStores,
@@ -1082,7 +1083,7 @@ class CertPathValidatorUtilities
         PKIXCRLStoreSelector deltaSelect = selBuilder.build();
 
         // find delta CRLs
-        Set temp = PKIXCRLUtil.findCRLs(deltaSelect, validityDate, certStores, pkixCrlStores);
+        Set temp = PKIXCRLUtil.findCRLs(deltaSelect, validityDate, certStores, pkixCrlStores, checkCrlDate);
 
         // if the named CRL store is empty, and we're told to check with CRLDP
         if (temp.isEmpty() && Properties.isOverrideSet("org.bouncycastle.x509.enableCRLDP"))
@@ -1119,7 +1120,7 @@ class CertPathValidatorUtilities
                                 if (store != null)
                                 {
                                     temp = PKIXCRLUtil.findCRLs(deltaSelect, validityDate, Collections.EMPTY_LIST,
-                                        Collections.singletonList(store));
+                                        Collections.singletonList(store), checkCrlDate);
                                 }
                                 break;
                             }

@@ -514,7 +514,7 @@ public class X509RevocationChecker
             try
             {
                 crls = isCheckCrlDP ? downloadCRLs(cert.getIssuerX500Principal(), validityDate,
-                    RevocationUtilities.getExtensionValue(cert, Extension.cRLDistributionPoints), helper)
+                    RevocationUtilities.getExtensionValue(cert, Extension.cRLDistributionPoints), helper, checkCrlDate)
                 : new HashSet<CRL>();
             }
             catch(AnnotatedException e1)
@@ -620,7 +620,7 @@ public class X509RevocationChecker
         });
     }
 
-    private Set<CRL> downloadCRLs(X500Principal issuer, Date currentDate, ASN1Primitive crlDpPrimitive, JcaJceHelper helper)
+    private Set<CRL> downloadCRLs(X500Principal issuer, Date currentDate, ASN1Primitive crlDpPrimitive, JcaJceHelper helper, boolean checkCrlDate)
     {
         CRLDistPoint crlDp = CRLDistPoint.getInstance(crlDpPrimitive);
         DistributionPoint[] points = crlDp.getDistributionPoints();
@@ -673,7 +673,7 @@ public class X509RevocationChecker
                             if (store != null)
                             {
                                 crls.addAll(PKIXCRLUtil.findCRLs(crlselect, currentDate, Collections.EMPTY_LIST,
-                                    Collections.singletonList(store)));
+                                    Collections.singletonList(store), checkCrlDate));
                             }
                         }
                         catch (Exception e)

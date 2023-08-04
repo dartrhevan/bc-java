@@ -217,26 +217,26 @@ subprojects {
   jacoco {
     reportsDirectory =  layout.buildDirectory.dir("jacoco")
   }
-
-  publishing {
-    publications {
-      mavenJava(MavenPublication) {
-        from components.java
-      }
-    }
-    repositories {
-      mavenLocal()
-
-      maven {
-        credentials {
-          username = "$System.env.NEXUS_USER"
-          password = "$System.env.NEXUS_PASS"
-        }
-
-        url = "${System.env.NEXUS_URL}/repository/maven-release-fts/"
-      }
-    }
-  }
+//
+//  publishing {
+//    publications {
+//      mavenJava(MavenPublication) {
+//        from components.java
+//      }
+//    }
+//    repositories {
+//      mavenLocal()
+//
+//      maven {
+//        credentials {
+//          username = "$System.env.NEXUS_USER"
+//          password = "$System.env.NEXUS_PASS"
+//        }
+//
+//        url = "${System.env.NEXUS_URL}/repository/maven-release-fts/"
+//      }
+//    }
+//  }
 
 }
 

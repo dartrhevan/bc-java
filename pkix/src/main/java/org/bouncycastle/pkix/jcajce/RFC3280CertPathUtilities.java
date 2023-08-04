@@ -630,7 +630,7 @@ class RFC3280CertPathUtilities
                 // get delta CRL(s)
                 try
                 {
-                    set.addAll(RevocationUtilities.getDeltaCRLs(currentDate, crl, paramsPKIX.getCertStores(), crlStores));
+                    set.addAll(RevocationUtilities.getDeltaCRLs(currentDate, paramsPKIX.isCheckCrlDate(), crl, paramsPKIX.getCertStores(), crlStores));
                 }
                 catch (AnnotatedException e)
                 {
@@ -664,7 +664,7 @@ class RFC3280CertPathUtilities
         PKIXCRLStoreSelector extSelect = new PKIXCRLStoreSelector.Builder(crlselect).setCompleteCRLEnabled(true).build();
 
         Set completeSet = PKIXCRLUtil.findCRLs(extSelect, validityDate, paramsPKIX.getCertStores(),
-            paramsPKIX.getCRLStores());
+            paramsPKIX.getCRLStores(), paramsPKIX.isCheckCrlDate());
         Set deltaSet = new HashSet();
 
         if (paramsPKIX.isUseDeltasEnabled())
@@ -672,7 +672,7 @@ class RFC3280CertPathUtilities
             // get delta CRL(s)
             try
             {
-                deltaSet.addAll(RevocationUtilities.getDeltaCRLs(validityDate, crl, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores()));
+                deltaSet.addAll(RevocationUtilities.getDeltaCRLs(validityDate, paramsPKIX.isCheckCrlDate(), crl, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores()));
             }
             catch (AnnotatedException e)
             {
@@ -868,7 +868,7 @@ class RFC3280CertPathUtilities
          * getAdditionalStore()
          */
 
-        Set crls = RevocationUtilities.getCompleteCRLs(dp, cert, validityDate, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores());
+        Set crls = RevocationUtilities.getCompleteCRLs(dp, cert, validityDate, paramsPKIX.isCheckCrlDate(), paramsPKIX.getCertStores(), paramsPKIX.getCRLStores());
         boolean validCrlFound = false;
         AnnotatedException lastException = null;
         Iterator crl_iter = crls.iterator();
@@ -904,7 +904,7 @@ class RFC3280CertPathUtilities
                 if (paramsPKIX.isUseDeltasEnabled())
                 {
                     // get delta CRLs
-                    Set deltaCRLs = RevocationUtilities.getDeltaCRLs(validityDate, crl, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores());
+                    Set deltaCRLs = RevocationUtilities.getDeltaCRLs(validityDate, paramsPKIX.isCheckCrlDate(), crl, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores());
                     // we only want one valid delta CRL
                     // (h)
                     deltaCRL = RFC3280CertPathUtilities.processCRLH(deltaCRLs, key);

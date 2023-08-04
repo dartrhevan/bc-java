@@ -16,12 +16,6 @@ import org.bouncycastle.util.StoreException;
 
 abstract class PKIXCRLUtil
 {
-    static Set findCRLs(PKIXCRLStoreSelector crlselect, Date validityDate, List certStores, List pkixCrlStores)
-        throws AnnotatedException
-    {
-        return findCRLs(crlselect, validityDate, certStores, pkixCrlStores, true);
-    }
-
     static Set findCRLs(PKIXCRLStoreSelector crlselect, Date validityDate, List certStores, List pkixCrlStores, boolean checkCrlDate)
         throws AnnotatedException
     {
