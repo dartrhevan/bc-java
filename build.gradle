@@ -219,9 +219,18 @@ subprojects {
   }
 
   publishing {
+    def artifact_id = "bc$project.name-$vmrange"
+    def artifactFullName = "$artifact_id-$version"
     publications {
       mavenJava(MavenPublication) {
-        from components.java
+        groupId = "org.bouncycastle"
+        artifactId = artifact_id
+        version = project.version
+
+        artifact("../build/artifacts/jdk1.5/jars/${artifactFullName}.jar")
+        pom.withXml {
+          asNode().setValue(new XmlParser().parse("poms/${artifactFullName}.pom").value())
+        }
       }
     }
     repositories {
