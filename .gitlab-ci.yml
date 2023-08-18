@@ -10,9 +10,11 @@ Build:
   stage: build
   image: ${BUILD_IMAGE}:${BUILD_IMAGE_TAG}
   before_script: []
+  variables:
+    JDKPATH: $JAVA_HOME
   tags:
     - devops
   script:
     - set -xv
-    - gradle build
-    - gradle publish
+    - ./build1-5to1-8
+    - gradle prov:publish pkix:publish util:publish

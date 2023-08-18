@@ -16,7 +16,7 @@ import org.bouncycastle.util.StoreException;
 
 abstract class PKIXCRLUtil
 {
-    static Set findCRLs(PKIXCRLStoreSelector crlselect, Date validityDate, List certStores, List pkixCrlStores, boolean checkCrlDate)
+    static Set findCRLs(PKIXCRLStoreSelector crlselect, Date validityDate, List certStores, List pkixCrlStores, boolean validateAllCrl)
         throws AnnotatedException
     {
         HashSet initialSet = new HashSet();
@@ -32,7 +32,7 @@ abstract class PKIXCRLUtil
             throw new AnnotatedException("Exception obtaining complete CRLs.", e);
         }
 
-        if (!checkCrlDate)
+        if (validateAllCrl)
         {
             return initialSet;
         }

@@ -103,7 +103,7 @@ public class X509RevocationChecker
         private boolean isCheckCrlDP = false;
         private boolean isFailOnNoValidCrl = false;
         private Date validityDate = new Date();
-        public boolean checkCrlDate = true;
+        public boolean validateAllCrl = true;
 
         /**
          * Base constructor.
@@ -302,12 +302,12 @@ public class X509RevocationChecker
         /**
          * Flag whether or not take CRL effective date into account.
          *
-         * @param checkCrlDate
+         * @param validateAllCrl
          * @return the current builder.
          */
-        public Builder setCheckCrlDate(boolean checkCrlDate)
+        public Builder setValidateAllCrl(boolean validateAllCrl)
         {
-            this.checkCrlDate = checkCrlDate;
+            this.validateAllCrl = validateAllCrl;
 
             return this;
         }
@@ -338,7 +338,7 @@ public class X509RevocationChecker
     private final Date validationDate;
     private final boolean isFailOnNoValidCrl;
     private final boolean isCheckCrlDP;
-    public final boolean checkCrlDate;
+    public final boolean validateAllCrl;
 
     private Date currentDate;
     private X500Principal workingIssuerName;
@@ -358,7 +358,7 @@ public class X509RevocationChecker
         this.validationDate = bldr.validityDate;
         this.isFailOnNoValidCrl =  bldr.isFailOnNoValidCrl;
         this.isCheckCrlDP = bldr.isCheckCrlDP;
-        this.checkCrlDate = bldr.checkCrlDate;
+        this.validateAllCrl = bldr.validateAllCrl;
 
         if (bldr.provider != null)
         {
@@ -456,7 +456,7 @@ public class X509RevocationChecker
 
             pkixBuilder = new PKIXExtendedParameters.Builder(pkixParams);
             pkixBuilder.setValidityModel(validityModel);
-            pkixBuilder.setCheckCrlDate(checkCrlDate);
+            pkixBuilder.setValidateAllCrl(validateAllCrl);
         }
         catch (GeneralSecurityException e)
         {
@@ -514,7 +514,7 @@ public class X509RevocationChecker
             try
             {
                 crls = isCheckCrlDP ? downloadCRLs(cert.getIssuerX500Principal(), validityDate,
-                    RevocationUtilities.getExtensionValue(cert, Extension.cRLDistributionPoints), helper, checkCrlDate)
+                    RevocationUtilities.getExtensionValue(cert, Extension.cRLDistributionPoints), helper, validateAllCrl)
                 : new HashSet<CRL>();
             }
             catch(AnnotatedException e1)
@@ -620,7 +620,7 @@ public class X509RevocationChecker
         });
     }
 
-    private Set<CRL> downloadCRLs(X500Principal issuer, Date currentDate, ASN1Primitive crlDpPrimitive, JcaJceHelper helper, boolean checkCrlDate)
+    private Set<CRL> downloadCRLs(X500Principal issuer, Date currentDate, ASN1Primitive crlDpPrimitive, JcaJceHelper helper, boolean validateAllCrl)
     {
         CRLDistPoint crlDp = CRLDistPoint.getInstance(crlDpPrimitive);
         DistributionPoint[] points = crlDp.getDistributionPoints();
@@ -673,7 +673,7 @@ public class X509RevocationChecker
                             if (store != null)
                             {
                                 crls.addAll(PKIXCRLUtil.findCRLs(crlselect, currentDate, Collections.EMPTY_LIST,
-                                    Collections.singletonList(store), checkCrlDate));
+                                    Collections.singletonList(store), validateAllCrl));
                             }
                         }
                         catch (Exception e)

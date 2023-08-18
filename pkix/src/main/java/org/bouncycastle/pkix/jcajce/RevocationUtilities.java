@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.security.auth.x500.X500Principal;
 
 import org.bouncycastle.asn1.ASN1Enumerated;
@@ -55,6 +57,8 @@ import org.bouncycastle.util.StoreException;
 
 class RevocationUtilities
 {
+    private static Logger LOG = Logger.getLogger(RevocationUtilities.class.getName());
+
     protected static final String ISSUING_DISTRIBUTION_POINT = Extension.issuingDistributionPoint.getId();
 
     protected static Date getValidityDate(PKIXExtendedParameters paramsPKIX, Date currentDate)
@@ -397,12 +401,12 @@ class RevocationUtilities
      * Fetches delta CRLs according to RFC 3280 section 5.2.4.
      *
      * @param validityDate The date for which the delta CRLs must be valid.
-     * @param checkCrlDate Flag whether to check CRL date before validating.
+     * @param validateAllCrl Flag whether to check CRL date before validating.
      * @param completeCRL  The complete CRL the delta CRL is for.
      * @return A <code>Set</code> of <code>X509CRL</code>s with delta CRLs.
      * @throws AnnotatedException if an exception occurs while picking the delta CRLs.
      */
-    protected static Set getDeltaCRLs(Date validityDate, boolean checkCrlDate, X509CRL completeCRL, List<CertStore> certStores,
+    protected static Set getDeltaCRLs(Date validityDate, boolean validateAllCrl, X509CRL completeCRL, List<CertStore> certStores,
                                       List<PKIXCRLStore> pkixCrlStores) throws AnnotatedException
     {
         X509CRLSelector baseDeltaSelect = new X509CRLSelector();
@@ -458,7 +462,7 @@ class RevocationUtilities
         PKIXCRLStoreSelector deltaSelect = selBuilder.build();
 
         // find delta CRLs
-        Set temp = PKIXCRLUtil.findCRLs(deltaSelect, validityDate, certStores, pkixCrlStores, checkCrlDate);
+        Set temp = PKIXCRLUtil.findCRLs(deltaSelect, validityDate, certStores, pkixCrlStores, validateAllCrl);
 
         Set result = new HashSet();
 
@@ -487,11 +491,11 @@ class RevocationUtilities
      *
      * @param dp           The distribution point for which the complete CRL
      * @param cert         The <code>X509Certificate</code> for which the CRL should be searched.
-     * @param checkCrlDate
+     * @param validateAllCrl
      * @return A <code>Set</code> of <code>X509CRL</code>s with complete CRLs.
      * @throws AnnotatedException if an exception occurs while picking the CRLs or no CRLs are found.
      */
-    protected static Set getCompleteCRLs(DistributionPoint dp, Object cert, Date validityDate, boolean checkCrlDate, List certStores, List crlStores)
+    protected static Set getCompleteCRLs(DistributionPoint dp, Object cert, Date validityDate, boolean validateAllCrl, List certStores, List crlStores)
         throws AnnotatedException, CRLNotFoundException
     {
         X509CRLSelector baseCrlSelect = new X509CRLSelector();
@@ -516,8 +520,11 @@ class RevocationUtilities
 
         PKIXCRLStoreSelector crlSelect = new PKIXCRLStoreSelector.Builder(baseCrlSelect).setCompleteCRLEnabled(true).build();
 
-        Set crls = PKIXCRLUtil.findCRLs(crlSelect, validityDate, certStores, crlStores, checkCrlDate);
-
+        Set crls = PKIXCRLUtil.findCRLs(crlSelect, validityDate, certStores, crlStores, validateAllCrl);
+        if (LOG.isLoggable(Level.FINE))
+        {
+            LOG.log(Level.FINE, "Found CRLs: " + crls.size());
+        }
         checkCRLsNotEmpty(crls, cert);
 
         return crls;

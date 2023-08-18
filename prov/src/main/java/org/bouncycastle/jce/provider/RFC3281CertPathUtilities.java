@@ -648,7 +648,7 @@ class RFC3281CertPathUtilities
                 if (paramsPKIX.isUseDeltasEnabled())
                 {
                     // get delta CRLs
-                    Set deltaCRLs = CertPathValidatorUtilities.getDeltaCRLs(currentDate, paramsPKIX.isCheckCrlDate(), crl, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores(), helper);
+                    Set deltaCRLs = CertPathValidatorUtilities.getDeltaCRLs(currentDate, paramsPKIX.isValidateAllCrl(), crl, paramsPKIX.getCertStores(), paramsPKIX.getCRLStores(), helper);
                     // we only want one valid delta CRL
                     // (h)
                     deltaCRL = RFC3280CertPathUtilities.processCRLH(deltaCRLs,
