@@ -19,11 +19,22 @@ CSP признаёт сертификат действительным, в то 
 - `failOnNoValidCRLFound`: требуется ли валить проверку при отсутствии подходящей CRL
 - `checkCrlDistributionPoint`: требуется ли проверять CRL DP
 
-| Настройка                 | Описание                                                               | Затронутые классы | Значение по умолчанию |
-|---------------------------|------------------------------------------------------------------------|-------------------|-----------------------|
-| failOnNoValidCRLFound     | требуется ли валить проверку при отсутствии подходящей CRL             |                   | false                 |
-| checkCrlDistributionPoint | ребуется ли проверять CRL DP                                           |                   | false                 |
-| validateAllCrl            | проверять ли все CRL, независимо от даты действия и наличия дубликатов |                   | false                 |
+| Настройка                 | Описание                                                               | Затронутые классы                     | Значение по умолчанию |
+|---------------------------|------------------------------------------------------------------------|---------------------------------------|-----------------------|
+| failOnNoValidCRLFound     | требуется ли валить проверку при отсутствии подходящей CRL             | X509RevocationChecker                 | false                 |
+| checkCrlDistributionPoint | ребуется ли проверять CRL DP                                           | X509RevocationChecker                 | false                 |
+| validateAllCrl            | проверять ли все CRL, независимо от даты действия и наличия дубликатов | RFC3280CertPathUtilities, PKIXCRLUtil | false                 |
+
+### Совместимость
+Для совместимости с Крипто Про CSP требуется установить значения `validateAllCrl=true` и `failOnNoValidCRLFound=false`, 
+что нарушает пункт 6.3.3 стандарта RFC 5280:
+'If ((reasons_mask is all-reasons) OR (cert_status is not UNREVOKED)),
+then the revocation status has been determined, so return
+cert_status.' - вместо этого проверяются все CRL данного УЦ: необходимо для случая наличия нескольких разносильных (но различных) CRL
+и
+'After processing such CRLs, if the revocation status has
+still not been determined, then return the cert_status UNDETERMINED.' - вместо этого возвращается статус `UNREVOKED`, если подходящий CRL не был найден.
+
 
 ### Сборка
 
